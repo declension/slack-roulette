@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "slack-roulette"
+version = "0.1.0"
+description = "Slack bot for chat-roulette style remote pairing / chatting"
+authors = ["Nick B <nick@declension.net>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+slackclient = "^2.5.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.4.1"
+chalice = "^1.13.0"
+boto3 = "^1.12.25"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
