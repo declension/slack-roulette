@@ -136,3 +136,7 @@ dmypy.json
 
 # Produced by Poetry in build
 requirements.txt
+
+# Chalice
+.chalice/deployments
+.chalice/deployed
