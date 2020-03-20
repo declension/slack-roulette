@@ -133,3 +133,6 @@ dmypy.json
 # Jetbrains
 .idea
 *.iml
+
+# Produced by Poetry in build
+requirements.txt
