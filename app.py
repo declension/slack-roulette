@@ -1,5 +1,7 @@
-from typing import Iterable
+from typing import Iterable, Text, Dict
 from urllib.parse import parse_qs
+
+from slack.errors import SlackApiError
 
 from chalicelib.aws import SSMConfigStore
 from chalicelib.chalice import SecretiveChalice
@@ -14,26 +16,26 @@ app = SecretiveChalice(app_name=APP_NAME, slack_client=slack_client)
 
 @app.route("/slack/commands", methods=["POST"],
            content_types=['application/x-www-form-urlencoded'])
-def commands():
+def roulette():
     data = parse_qs(app.current_request.raw_body.decode())
-    app.log.info("Got command with data: %s", data)
+    app.log.info("Got %s command with data: %s", data.get("command"), data)
     try:
         channel_id = data["channel_id"][0]
-    except (KeyError, IndexError) as e:
-        app.log.error(f"Couldn't get channel ID from {data} ({e!r}")
-        return {"response_type": "in_channel",
-                "text": "Couldn't get channel ID for Slack"
-                }
-    try:
         channel_type = data.get("channel_name")[0]
     except (KeyError, IndexError) as e:
-        app.log.error(f"Couldn't get channel name from {data} ({e!r}")
-        return {}
+        app.log.error(f"Couldn't get channel details from {data} ({e!r}")
+        return simple_message("Couldn't get channel details from Slack")
     if channel_type in {"directmessage"}:
-        return {"response_type": "in_channel",
-                "text": "Can't do this in conversations! Try in a channel.."
-                }
-    resp = slack_client.conversations_members(channel=channel_id).validate()
+        app.log.info("Reminding @%s this won't work...", data.get("user_name"))
+        return simple_message("Can't do this in conversations! "
+                              "Try a channel...")
+    try:
+        client = app.slack_client
+        resp = client.conversations_members(channel=channel_id).validate()
+    except SlackApiError as e:
+        app.log.error("Couldn't get conversation members from Slack API (%r)",
+                      e)
+        return {}
     app.log.info("Got API response: %s", resp)
     member_ids = resp.get("members")
     body = response_for_members(member_ids)
@@ -42,6 +44,10 @@ def commands():
         "text": f":game_die: {APP_NAME} users:\n * {body}",
         "delete_original": "true"
     }
+
+
+def simple_message(text: Text) -> Dict[Text, Text]:
+    return {"response_type": "in_channel", "text": text}
 
 
 def response_for_members(member_ids: Iterable[UserId]):
