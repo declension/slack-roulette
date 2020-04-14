@@ -9,7 +9,7 @@ from chalicelib.roulette import choose_pairs, UserId
 from chalicelib.slack import LazySlackClient
 
 APP_NAME = "slack-roulette"
-config = SSMConfigStore()
+config = SSMConfigStore(prefix="SLACK_ROULETTE_")
 slack_client = LazySlackClient(config)
 app = SecretiveChalice(app_name=APP_NAME, slack_client=slack_client)
 
@@ -31,11 +31,13 @@ def roulette():
                               "Try a channel...")
     try:
         client = app.slack_client
+        app.log.info("Getting members of channel %s", channel_id)
         resp = client.conversations_members(channel=channel_id).validate()
     except SlackApiError as e:
         app.log.error("Couldn't get conversation members from Slack API (%r)",
                       e)
-        return {}
+        return simple_message(":disappointed: "
+                              "Got stuck getting channel members")
     app.log.info("Got API response: %s", resp)
     member_ids = resp.get("members")
     body = response_for_members(member_ids)

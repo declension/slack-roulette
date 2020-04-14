@@ -58,4 +58,6 @@ class LazySlackClient(WebClient):
         """Lazy, cached token access"""
         if not self._token:
             self._token = self.config.slack_api_token
+            assert self._token
+            logger.info("Got token ending ...%s", self._token[-4:])
         return self._token
