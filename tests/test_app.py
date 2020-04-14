@@ -8,8 +8,9 @@ from hypothesis import given
 from hypothesis.strategies import lists
 from slack.web.slack_response import SlackResponse
 
-from app import response_for_members, UserId, roulette, app, APP_NAME
-from chalicelib.slack import LazySlackClient
+from app import roulette, app
+from chalicelib.roulette import UserId
+from chalicelib.slack import LazySlackClient, response_for_members, BULLET
 from tests.strategies import safe_id_strategy
 
 
@@ -47,7 +48,9 @@ def test_roulette_endpoint():
         headers={"Content-Type": "application/x-www-form-urlencoded"})
     resp = roulette()
     assert resp
-    assert APP_NAME in resp["text"]
+    text = resp["text"]
+    assert "How about chats between" in text
+    assert BULLET in text
 
 
 def www_request_of(data: Dict[Text, Text], headers=None):

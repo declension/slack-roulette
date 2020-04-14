@@ -1,12 +1,11 @@
-from typing import Iterable, Text, Dict
+from typing import Text, Dict
 from urllib.parse import parse_qs
 
 from slack.errors import SlackApiError
 
 from chalicelib.aws import SSMConfigStore
 from chalicelib.chalice import SecretiveChalice
-from chalicelib.roulette import choose_pairs, UserId
-from chalicelib.slack import LazySlackClient
+from chalicelib.slack import LazySlackClient, BULLET, response_for_members
 
 APP_NAME = "slack-roulette"
 config = SSMConfigStore(prefix="SLACK_ROULETTE_")
@@ -43,16 +42,10 @@ def roulette():
     body = response_for_members(member_ids)
     return {
         "response_type": "in_channel",
-        "text": f":game_die: {APP_NAME} users:\n * {body}",
+        "text": f":game_die: How about chats between:\n {BULLET} {body}",
         "delete_original": "true"
     }
 
 
 def simple_message(text: Text) -> Dict[Text, Text]:
     return {"response_type": "in_channel", "text": text}
-
-
-def response_for_members(member_ids: Iterable[UserId]):
-    combos = choose_pairs(member_ids)
-    return '\n * '.join(f"<@{mid1}> <-> <@{mid2}>" for mid1, mid2 in combos)
-

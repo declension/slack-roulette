@@ -1,16 +1,19 @@
 import asyncio
 from html import escape, unescape
 from logging import getLogger
-from typing import Text, Any, Optional
+from typing import Text, Any, Optional, Iterable
 
 from slack import WebClient
 from slack.web.base_client import BaseClient
 
 from chalicelib.config import ConfigStore
+from chalicelib.roulette import UserId, choose_pairs
 
 Token = Text
 
 logger = getLogger(__name__)
+
+BULLET = "•"
 
 
 def sanitise(s: Text):
@@ -61,3 +64,9 @@ class LazySlackClient(WebClient):
             assert self._token
             logger.info("Got token ending ...%s", self._token[-4:])
         return self._token
+
+
+def response_for_members(member_ids: Iterable[UserId]):
+    combos = choose_pairs(member_ids)
+    return f"\n {BULLET} ".join(f"<@{mid1}> <-> <@{mid2}>"
+                                for mid1, mid2 in combos)
